@@ -1,0 +1,16 @@
+{
+  "env": {
+    "browser": true
+  },
+  "extends": [
+    "eslint-config-pretty-strict"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "root": true,
+  "ignorePatterns": [
+    "config/**/*.{js,ts}"
+  ]
+}

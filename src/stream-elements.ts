@@ -18,11 +18,11 @@ export interface Tier {
   tier: "prime" | "1000" | "2000" | "3000";
 }
 
-export interface NameAmount extends Amount, Name { }
+export interface NameAmount extends Amount, Name {}
 
-export interface NameAmountMessage extends Name, Amount, Message { }
+export interface NameAmountMessage extends Name, Amount, Message {}
 
-export interface NameAmountTierMessage extends Name, Amount, Tier, Message { }
+export interface NameAmountTierMessage extends Name, Amount, Tier, Message {}
 
 export interface CreatedAt {
   createdAt: string;
@@ -34,7 +34,7 @@ export interface Currency {
   symbol: string;
 }
 
-export interface ActivityCommon extends Name, CreatedAt { }
+export interface ActivityCommon extends Name, CreatedAt {}
 
 export interface FollowActivity extends ActivityCommon {
   type: "follow";
@@ -261,10 +261,10 @@ export interface FollowEvent extends EventCommon, Amount, Count, Tier {
 
 export interface SubscribeEvent
   extends EventCommon,
-  Amount,
-  Count,
-  Tier,
-  Message {
+    Amount,
+    Count,
+    Tier,
+    Message {
   type: "subscriber";
   gifted: boolean;
   bulkGifted: boolean;
@@ -294,35 +294,35 @@ export interface RaidEvent extends EventCommon, Amount, Count, Tier {
   originalEventName: "raid-latest";
 }
 
-// TODO: message, delete-message, delete-messages, event:skip, alertService:toggleSound, bot:counter, kvstore:update
-//       widget-button
+// TODO: message, delete-message, delete-messages, event:skip,
+// alertService:toggleSound, bot:counter, kvstore:update, widget-button
 
 export type EventReceived =
   | {
-    listener: "follower-latest";
-    event: FollowEvent;
-  }
+      listener: "follower-latest";
+      event: FollowEvent;
+    }
   | {
-    listener: "subscriber-latest";
-    event: SubscribeEvent;
-  }
+      listener: "subscriber-latest";
+      event: SubscribeEvent;
+    }
   | {
-    listener: "host-latest";
-    event: HostEvent;
-  }
+      listener: "host-latest";
+      event: HostEvent;
+    }
   | {
-    listener: "cheer-latest";
-    event: CheerEvent;
-  }
+      listener: "cheer-latest";
+      event: CheerEvent;
+    }
   | {
-    listener: "tip-latest";
-    event: TipEvent;
-  }
+      listener: "tip-latest";
+      event: TipEvent;
+    }
   | {
-    listener: "raid-latest";
-    event: RaidEvent;
-  }
+      listener: "raid-latest";
+      event: RaidEvent;
+    }
   | {
-    listener: EventName;
-    event: { [key: string]: any };
-  };
+      listener: EventName;
+      event: { [key: string]: any };
+    };
