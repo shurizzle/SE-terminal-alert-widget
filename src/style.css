@@ -1,0 +1,131 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: Hack, monospace;
+}
+
+.window {
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.decoration {
+  background: #b4b4b4;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 7px 7px 0px 0px;
+  flex: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.decoration.dark {
+  background: #273138;
+}
+
+.decoration .controls {
+  padding: 10px;
+  display: inline-block;
+  flex: 0 0 77px;
+}
+
+.decoration .controls.hidden {
+  visibility: hidden;
+}
+
+.decoration .controls > .dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin: 0 4px 0 0;
+  background: #4a5c66;
+  border: 1px solid #4a5c66;
+}
+
+.decoration .controls > .dot.red {
+  background: #ff6057;
+  border: 1px solid #e14640;
+}
+
+.decoration .controls > .dot.amber {
+  background: #ffbd2e;
+  border: 1px solid #dfa123;
+}
+
+.decoration .controls > .dot.green {
+  background: #27c93f;
+  border: 1px solid #1dad2b;
+}
+
+.decoration .title {
+  font-family: Hack, monospace;
+  flex: 1 0;
+  overflow: hidden;
+  color: #eee;
+  display: flex;
+  align-items: center;
+}
+
+.decoration .title div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  width: 100%;
+}
+
+.terminal {
+  flex: 2;
+  background-color: #282828;
+  box-sizing: border-box;
+  padding: 5px;
+  color: #eee;
+  overflow: hidden;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y proximity;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+#cursor {
+  display: inline-block;
+  background-color: #eee;
+  -webkit-animation: blink 1s step-end infinite;
+  animation: blink 1s step-end infinite;
+  scroll-snap-align: end;
+}
+
+@-webkit-keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.prompt {
+  color: #169c51;
+  font-weight: bold;
+}
+
+#desktop {
+  width: 100%;
+  height: 100%;
+  display: none;
+}
