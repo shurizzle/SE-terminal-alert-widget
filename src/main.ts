@@ -48,7 +48,7 @@ class Raw {
 const raw = (text: Raw | string): Raw => {
   "use strict";
 
-  if (Object.prototype.isPrototypeOf.call(text, Raw)) {
+  if (Object.prototype.isPrototypeOf.call(Raw.prototype, text)) {
     return text;
   }
 
@@ -87,7 +87,7 @@ const html = (() => {
       res += s;
       if (vars.length > i) {
         const v = vars[i];
-        if (Object.prototype.isPrototypeOf.call(v, Raw)) {
+        if (Object.prototype.isPrototypeOf.call(Raw.prototype, v)) {
           res += v.toString();
         } else if (v !== null && v !== undefined) {
           res += escapeHtml(v.toString());
@@ -108,7 +108,7 @@ const escapeCommand = (cmd: Array<string | Raw> | string | Raw): string => {
 
   return (Array.isArray(cmd) ? cmd : [cmd])
     .map((item: string | Raw) => {
-      if (Object.prototype.isPrototypeOf.call(item, Raw)) {
+      if (Object.prototype.isPrototypeOf.call(Raw.prototype, item)) {
         return item.toString();
       }
 
@@ -131,6 +131,7 @@ interface TerminalOptions {
   title?: string;
   motd?: string | Raw;
   runForever?: boolean;
+  hide?: boolean;
 }
 
 interface ResolvedTerminalOptions {
@@ -141,6 +142,7 @@ interface ResolvedTerminalOptions {
   title: string;
   motd?: string | Raw;
   runForever: boolean;
+  hide: boolean;
 }
 
 const resolveTerminalOptions = (
@@ -164,6 +166,7 @@ const resolveTerminalOptions = (
     title,
     motd: opts.motd,
     runForever: opts.runForever ?? false,
+    hide: opts.hide ?? true,
   };
 };
 
@@ -216,8 +219,11 @@ const terminal = (
 
   return new Promise((resolve, reject) => {
     const hide = () => {
-      desktop.innerHTML = "";
-      desktop.style.display = "none";
+      if (opts.hide) {
+        desktop.innerHTML = "";
+        desktop.style.display = "none";
+      }
+
       resolve(null);
     };
 
@@ -262,6 +268,54 @@ const terminal = (
   });
 };
 
+const play = (src: string): (() => Promise<void>) => {
+  "use strict";
+
+  const audio = new Audio();
+  audio.autoplay = false;
+  audio.loop = false;
+  audio.muted = false;
+  audio.preload = "auto";
+  audio.src = src;
+
+  const destroy = () => {
+    for (const evtName of ["ended", "error", "abort", "emptied", "stalled"]) {
+      // @ts-ignore
+      audio[`on${evtName}`] = null;
+    }
+
+    audio.pause();
+    audio.removeAttribute("src");
+  };
+
+  const res: Promise<void> = new Promise((resolve, reject) => {
+    audio.onended = () => {
+      try {
+        destroy();
+      } finally {
+        resolve();
+      }
+    };
+
+    for (const errName of ["error", "abort", "emptied", "stalled"]) {
+      // @ts-ignore
+      audio[`on${errName}`] = ((errName) => () => {
+        try {
+          destroy();
+        } finally {
+          reject(new Error(errName));
+        }
+      })(errName);
+    }
+  });
+
+  return (): Promise<void> => {
+    audio.play();
+
+    return res;
+  };
+};
+
 const fireTerminal = (
   prompt: string,
   command: Array<string | Raw> | string | Raw,
@@ -281,7 +335,26 @@ let userCurrency: Currency = {
   symbol: "€",
 };
 let minTip = 1;
-// let minCheer = 1;
+let apiToken: string = "";
+
+const tts = (originalText: string): (() => Promise<void>) => {
+  "use strict";
+
+  const trimmedText = originalText.trim();
+  if (trimmedText.length !== 0) {
+    const text = encodeURIComponent(trimmedText);
+    const api = encodeURIComponent(apiToken);
+
+    return play(
+      `https://api.streamelements.com/kappa/v2/speech?voice=it-IT-Standard-A&text=${text}&key=${api}`
+    );
+  }
+
+  return () =>
+    new Promise((resolve) => {
+      resolve();
+    });
+};
 
 const fireFollow = (who: string) => {
   "use strict";
@@ -312,14 +385,15 @@ const fireRaid = (who: string, viewers: number) => {
   "use strict";
 
   return fireTerminal(`${who}@ttv:~$ `, [raw("chroot"), `/mnt/${whoami}`], {
-    title: viewers ? `${viewers} viewers` : null,
+    title: `${viewers} viewers`,
   });
 };
 
 const fireTip = (who: string, amount: number, message?: string) => {
   "use strict";
 
-  return fireTerminal(
+  const term = terminal.bind(
+    this,
     `${who}@ttv:~$ `,
     [
       raw("cat"),
@@ -327,8 +401,32 @@ const fireTip = (who: string, amount: number, message?: string) => {
       raw(">"),
       `/dev/${whoami}/funds`,
     ],
-    { motd: message }
+    { motd: message, hide: !message }
   );
+
+  if (message) {
+    const ttsRun = tts(message);
+
+    return queueAdd(() => {
+      return new Promise((resolve) => {
+        let count = 0;
+        const resolver = () => {
+          count += 1;
+          if (count === 2) {
+            const desktop = document.getElementById("desktop");
+            desktop.innerHTML = "";
+            desktop.style.display = "none";
+            resolve();
+          }
+        };
+
+        term().finally(resolver);
+        ttsRun().finally(resolver);
+      });
+    });
+  }
+
+  return queueAdd(term);
 };
 
 // eslint-disable-next-line no-undef
@@ -340,9 +438,8 @@ if (process.env.NODE_ENV === "development") {
     "fireRaid",
     "fireTip",
   ]) {
-    // @ts-ignore
-    window[name] = self[name];
-    // eval(`window.${name} = ${name}`);
+    // eslint-disable-next-line no-eval
+    eval(`window.${name} = ${name}`);
   }
 }
 
@@ -396,8 +493,6 @@ interface FieldData {
   minHost: number;
   minRaid: number;
   minTip: number;
-  minCheer: number;
-  locale: string;
 }
 
 window.addEventListener(
@@ -405,6 +500,8 @@ window.addEventListener(
   (obj: CustomEvent<WidgetLoadData<FieldData>>): void => {
     "use strict";
 
+    // eslint-disable-next-line prefer-destructuring
+    apiToken = obj.detail.channel.apiToken;
     whoami = obj.detail.channel.username;
     userCurrency = obj.detail.currency;
     const { fieldData } = obj.detail;
