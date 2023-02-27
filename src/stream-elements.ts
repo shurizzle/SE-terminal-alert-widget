@@ -294,8 +294,48 @@ export interface RaidEvent extends EventCommon, Amount, Count, Tier {
   originalEventName: "raid-latest";
 }
 
-// TODO: message, delete-message, delete-messages, event:skip,
-// alertService:toggleSound, bot:counter, kvstore:update, widget-button
+export interface ChatMessageEvent {
+  service: string;
+  data: {
+    time: number;
+    tag: { [key: string]: string };
+    nick: string;
+    userId: string;
+    displayName: string;
+    displayColor: string;
+    badges: {
+      type: string;
+      version: string;
+      url: string;
+      description?: string;
+    }[];
+    channel: string;
+    text: string;
+    isAction: boolean;
+    emotes: {
+      type: string;
+      name: string;
+      id: string;
+      gif: boolean;
+      urls: { [key: string]: string };
+      start: number;
+      end: number;
+    }[];
+    msgId: string;
+  };
+  renderedText: string;
+}
+
+export interface ChatDeleteMessageEvent {
+  msgId: string;
+}
+
+export interface ChatDeleteMessagesEvent {
+  userId: string;
+}
+
+// TODO: event:skip, alertService:toggleSound, bot:counter, kvstore:update,
+//       widget-button
 
 export type EventReceived =
   | {
@@ -321,6 +361,18 @@ export type EventReceived =
   | {
       listener: "raid-latest";
       event: RaidEvent;
+    }
+  | {
+      listener: "message";
+      event: ChatMessageEvent;
+    }
+  | {
+      listener: "delete-message";
+      event: ChatDeleteMessageEvent;
+    }
+  | {
+      listener: "delete-messages";
+      event: ChatDeleteMessagesEvent;
     }
   | {
       listener: EventName;
