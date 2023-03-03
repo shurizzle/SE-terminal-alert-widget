@@ -1,5 +1,5 @@
 import GraphemeSplitter from "grapheme-splitter";
-import { Currency, EventReceived, WidgetLoadData } from "./stream-elements";
+import { Currency, EventReceived, WidgetLoadData } from "stream-elements";
 
 const queueAdd = (() => {
   "use strict";
@@ -452,6 +452,7 @@ window.addEventListener(
       return;
     }
 
+    // @ts-ignore
     if (typeof obj.detail.event.itemId !== "undefined") {
       // @ts-ignore
       obj.detail.listener = "redemption-latest";
